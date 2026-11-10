@@ -21,4 +21,29 @@ K+ = U;
 
 ## Estrutura
 
-A estrutura escolhida para guardar o conjunto de dependências funcionais foi uma combinação de vetores e bitmaps.
+A estrutura escolhida para guardar o conjunto de dependências funcionais foi a seguinte:
+
+```c
+typedef struct dpf_t {
+    char *atrib;        // vetor de atributos (ex. [A, B, C])
+    int quant_atrib;    // quantidade de atributos
+    int quant_deps;     // quantidade de dependencias funcionais
+    char **lhs;         // matriz dos determinantes
+    char **rhs;         // matriz dos dependentes
+} dpf_t;
+```
+
+Então se a entrada recebida for:
+
+```txt
+U = {A,B,C,D,E}
+F = { A->BC, C->D, BD->E }
+```
+
+A estrutura `dpf_t` guarda os valores da seguinte maneira:
+
+| **Campo**     | **Valor**|
+|---------------+----------|
+| `atrib`       | ABCDE    |
+| `quant_atrib` | 5        |
+| `quant_deps`  | 3        |
