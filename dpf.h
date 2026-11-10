@@ -17,9 +17,17 @@ typedef struct dpf_t {
 //     U = {A,B,C,D,E}
 //     F = { A->BC, C->D, BD->E }
 // retorna NULL em caso de erro
-dpf_t *cria_dpf();
+dpf_t *leitura_dpf();
 
 // libera a memoria alocada para a estrutura dpf_t
 void libera_dpf(dpf_t *dpf);
+
+// imprime a estrutura dpf_t
+void imprime_dpf(dpf_t *dpf);
+
+// recebe um atributo e retorna o indice correspondente no vetor de atributos
+// retorna -1 se o atributo nao for encontrado
+int get_atrib_index(dpf_t *dpf, char c);
+
 
 #endif
