@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 #include "dpf.h"
 
 #define MAX_BUFFER 100
@@ -9,7 +10,7 @@
 
 
 int get_atrib_index(dpf_t *dpf, char c) {
-    for (int i = 0; i < dpf->quant; i++) {
+    for (int i = 0; i < dpf->quant_atrib; i++) {
         if (dpf->atrib[i] == c) {
             return i;
         }
@@ -17,7 +18,18 @@ int get_atrib_index(dpf_t *dpf, char c) {
     return -1; // retorna -1 se o atributo nao for encontrado
 }
 
-dpf_t *leitura_dpf() {
+// consome caracteres da entrada até encontrar o caractere alvo ou EOF
+int pula_ate(FILE *entrada, char alvo) {
+    int ch;
+    while ((ch = fgetc(entrada)) != EOF) {
+        if (ch == alvo) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+dpf_t *leitura_dpf(FILE *entrada) {
 
     // aloca memoria para a estrutura dpf_t
     dpf_t *dpf = malloc(sizeof(dpf_t));
@@ -30,16 +42,25 @@ dpf_t *leitura_dpf() {
     char *atrib_buff = malloc(MAX_BUFFER * sizeof(char)); // vetor de atributos
     
     // inicia leitura do conjunto de atributos
-    scanf("U = {");
-    while ((c = getchar()) != '}') {
-        if (c != ',') {
+    if (!pula_ate(entrada, '{')) {
+        free(atrib_buff);
+        free(dpf);
+        return NULL; // erro na leitura
+    }
+    while ((c = fgetc(entrada)) != '}') {
+        if (c == EOF || i >= MAX_BUFFER - 1) {
+            free(atrib_buff);
+            free(dpf);
+            return NULL; // erro na leitura
+        }
+        if (c != ',' && c !=';' && c != ' ') { // ignora virgulas, ponto e virgula e espacos
             atrib_buff[i] = c;
             i++;
         }
     }
     atrib_buff[i] = '\0'; // adiciona o caractere nulo ao final
 
-    dpf->quant = i; 
+    dpf->quant_atrib = i; 
     dpf->atrib = malloc((i + 1) * sizeof(char));
     strncpy(dpf->atrib, atrib_buff, i + 1); 
 
@@ -48,34 +69,41 @@ dpf_t *leitura_dpf() {
     // aloca memoria para as matrizes de bitmaps
     dpf->lhs = malloc(MAX_DEPENDENCIAS * sizeof(char *));
     for (i = 0; i < MAX_DEPENDENCIAS; i++) {
-        dpf->lhs[i] = malloc(dpf->quant * sizeof(char));
+        dpf->lhs[i] = malloc(dpf->quant_atrib * sizeof(char));
     }
     dpf->rhs = malloc(MAX_DEPENDENCIAS * sizeof(char *));
     for (i = 0; i < MAX_DEPENDENCIAS; i++) {
-        dpf->rhs[i] = malloc(dpf->quant * sizeof(char));
+        dpf->rhs[i] = malloc(dpf->quant_atrib * sizeof(char));
     }
 
     // inicializa as matrizes de bitmaps com zeros
     for (i = 0; i < MAX_DEPENDENCIAS; i++) {
-        for (int j = 0; j < dpf->quant; j++) {
+        for (int j = 0; j < dpf->quant_atrib; j++) {
             dpf->lhs[i][j] = 0;
             dpf->rhs[i][j] = 0;
         }
     }
 
     // inicia leitura do conjunto de dependencias funcionais
-    scanf("F = {");
+    if (!pula_ate(entrada, '{')) {
+        libera_dpf(dpf);
+        return NULL; // erro na leitura
+    }
     i = 0; 
     bool left_side = true; // indica se estamos lendo o lado esquerdo ou direito da dependencia
-    while ((c = getchar()) != '}') {
-        if (c == ',') {
+    while ((c = fgetc(entrada)) != '}') {
+        if (c == EOF || i >= MAX_DEPENDENCIAS) {
+            libera_dpf(dpf);
+            return NULL; // erro na leitura
+        }
+        if (c == ',' || c == ';') {
             left_side = true;
             i++; // passa para a proxima dependencia
             continue;
         }
         if (c == '-') {
             left_side = false; 
-            getchar(); // descarta o caractere '>'
+            pula_ate(entrada, '>'); // pula o caractere '>'
             continue;
         }
         if (c != ' ') {
@@ -92,6 +120,8 @@ dpf_t *leitura_dpf() {
             }
         }
     }
+
+    dpf->quant_deps = i + 1; // atualiza a quantidade de dependencias lidas
 
     return dpf;
 }
@@ -112,13 +142,13 @@ void libera_dpf(dpf_t *dpf) {
 
 void imprime_dpf(dpf_t *dpf) {
     printf("Atributos: ");
-    for (int i = 0; i < dpf->quant; i++) {
+    for (int i = 0; i < dpf->quant_atrib; i++) {
         printf("%c ", dpf->atrib[i]);
     }
     printf("\nDependencias Funcionais:\n");
-    for (int i = 0; i < MAX_DEPENDENCIAS; i++) {
+    for (int i = 0; i < dpf->quant_deps; i++) {
         bool has_dependency = false;
-        for (int j = 0; j < dpf->quant; j++) {
+        for (int j = 0; j < dpf->quant_atrib; j++) {
             if (dpf->lhs[i][j] == 1 || dpf->rhs[i][j] == 1) {
                 has_dependency = true;
                 break;
@@ -126,13 +156,13 @@ void imprime_dpf(dpf_t *dpf) {
         }
         if (has_dependency) {
             printf("Dependencia %d: ", i + 1);
-            for (int j = 0; j < dpf->quant; j++) {
+            for (int j = 0; j < dpf->quant_atrib; j++) {
                 if (dpf->lhs[i][j] == 1) {
                     printf("%c", dpf->atrib[j]);
                 }
             }
             printf(" -> ");
-            for (int j = 0; j < dpf->quant; j++) {
+            for (int j = 0; j < dpf->quant_atrib; j++) {
                 if (dpf->rhs[i][j] == 1) {
                     printf("%c", dpf->atrib[j]);
                 }

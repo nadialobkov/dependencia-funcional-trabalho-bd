@@ -6,7 +6,7 @@ CFLAGS = -Wall -Wextra -std=c99
 all: main
 
 main: main.c dpf.c
-	$(CC) $(CFLAGS) -o main main.c dpf.c
+	$(CC) $(CFLAGS) -o fdtool main.c dpf.c
 
 clean:
-	rm -f main
+	rm -f fdtool
