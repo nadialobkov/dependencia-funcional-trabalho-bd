@@ -3,14 +3,16 @@
 
 #include <stdio.h>
 
+#define VAZIO ' '
+
 // ESTRUTURA ------------------------------------------------------------------------------
 
 typedef struct dpf_t {
     char *atrib;        // vetor de atributos (ex. [A, B, C])
     int quant_atrib;    // quantidade de atributos
     int quant_deps;     // quantidade de dependencias funcionais
-    char **lhs;         // matriz de bitmaps dos determinantes
-    char **rhs;         // matriz de bitmaps dos dependentes
+    char **lhs;         // matriz dos determinantes
+    char **rhs;         // matriz dos dependentes
 } dpf_t;
 
 // FUNCOES --------------------------------------------------------------------------------
@@ -32,5 +34,11 @@ void imprime_dpf(dpf_t *dpf);
 // retorna -1 se o atributo nao for encontrado
 int get_atrib_index(dpf_t *dpf, char c);
 
+// verifica se todos os atributos de um conjunto estao presentes em outro conjunto
+// retorna 1 se todos os atributos estiverem presentes, 0 caso contrario
+int contem_atributos(char *atributos, char *conjunto);
+
+// recebe um conjunto de atributos e um bitmap e retorna uma string com os atributos correspondentes
+char *get_atributos(char *atributos, char *bitmap);
 
 #endif
