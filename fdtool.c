@@ -47,3 +47,5 @@ void fecho(dpf_t *dpf, char *atributos) {
     printf("Fecho: %s\n", fecho);
     free(fecho);
 }
+
+void cobertura_min(dpf_t *dpf) {

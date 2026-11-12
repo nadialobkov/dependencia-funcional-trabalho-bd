@@ -21,7 +21,7 @@ K+ = U;
 
 ## Estrutura
 
-A estrutura escolhida para guardar o conjunto de dependências funcionais foi a seguinte:
+A estrutura escolhida para guardar o conjunto de dependências funcionais foi uma `struct` que armazena o vetor de atributos, a quantidade de atributos, a quantidade de dependencias funcionais, uma matriz com os atributos do lado esquerdo de todas as dependências funcionais e uma matriz contendo o lado direito. 
 
 ```c
 typedef struct dpf_t {
@@ -33,7 +33,11 @@ typedef struct dpf_t {
 } dpf_t;
 ```
 
-Então se a entrada recebida for:
+Seja $a_i$ o elemento na posição $i$ do vetor `atrib`, temos as matrizes `lhs`e `rhs` de elementos $b_{ji}$ onde $j$ corresponde ao número da dependência funcional.
+
+### Exemplo
+
+Dada a seguinte entrada:
 
 ```txt
 U = {A,B,C,D,E}
@@ -42,8 +46,34 @@ F = { A->BC, C->D, BD->E }
 
 A estrutura `dpf_t` guarda os valores da seguinte maneira:
 
-| **Campo**     | **Valor**|
-|---------------+----------|
-| `atrib`       | ABCDE    |
-| `quant_atrib` | 5        |
-| `quant_deps`  | 3        |
+```txt
+- atrib:          ABCDE
+
+- quant_atrib:    5
+- quant_deps:     3
+
+- lhs:            A____
+                  __C__
+                  _B_D_
+
+- rhs:            _BC__
+                  ___D_
+                  ____E  
+```
+
+> Obs: Os "_" estão escritos no exemplo apenas para melhor a visualização. Na prática, os vetores contêm espaços vazios (" ").
+
+## Leitura da Entrada
+
+A função `main` faz a análise dos argumentos passados na linha de comando, identifica o caminho para o arquivo de extensão `.fds` e chama a função `leitura_dpf` para fazer o *parsing* do arquivo e armazenar as informações na estrutura `dpf_t`.
+
+```c
+dpf_t *leitura_dpf(FILE *entrada);
+```
+
+## Fecho
+
+Seja o fecho $X^+$. O cálculo do fecho segue a seguinte lógica já conhecida:
+
+1. Criamos um vetor `fecho` com o mesmo tamanho da quantidade de atributos que vai guardar o fecho do conjunto $X$. Inicialmente, copiamos o conjunto $X$ direto no vetor de fecho, pois sabemos que $X \subseteq X^+$.
+2. Percorremos as dependências funcionais.
