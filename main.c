@@ -53,7 +53,9 @@ int main(int argc, char *argv[]) {
         libera_dpf(min_cover);
     } 
     else if (strcmp(argv[1], "keys") == 0) {
-        // chaves_candidatas(dpf);
+        chaves_t *candidatas = chaves_candidatas(dpf);
+        imprime_chaves(candidatas);
+        libera_chaves(candidatas);
     } 
     else if (strcmp(argv[1], "normalform") == 0) {
         // forma_normal(dpf);

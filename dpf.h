@@ -17,6 +17,12 @@ typedef struct dpf_t {
     char **rhs;         // matriz dos dependentes
 } dpf_t;
 
+
+typedef struct chaves_t {
+    char **chaves;      // matriz de chaves candidatas
+    int quant;          // quantidade de chaves candidatas
+} chaves_t;
+
 // FUNCOES --------------------------------------------------------------------------------
 
 // faz a leitura a partir da entrada padrao e retorna um ponteiro para a estrutura dpf_t
@@ -45,6 +51,9 @@ void imprime_atributos(char *atributos);
 // ajusta a quantidade de dependencias da dpf e posicão das linhas validas
 void remove_vazios(dpf_t *dpf);
 
+// recebe uma dpf e ordena as linhas das dependencias de acordo com a ordem dos atributos
+void ordena_dependencias(dpf_t *dpf);
+
 // recebe um atributo e retorna o indice correspondente no vetor de atributos
 // retorna -1 se o atributo nao for encontrado
 int get_atrib_index(dpf_t *dpf, char c);
@@ -53,7 +62,19 @@ int get_atrib_index(dpf_t *dpf, char c);
 // retorna 1 se todos os atributos estiverem presentes, 0 caso contrario
 int contem_atributos(char *atributos, char *conjunto);
 
+int atributos_iguais(char *atributos1, char *atributos2);
+
 // recebe um conjunto de atributos e um bitmap e retorna uma string com os atributos correspondentes
 char *get_atributos(char *atributos, char *bitmap);
+
+// aloca espaço na memoria para a estrutura chaves_t
+// recebe quantidade de atributos refernte a dpf relacionada
+chaves_t *aloca_chaves(int atributos);
+
+// libera a memoria alocada para a estrutura chaves_t
+void libera_chaves(chaves_t *chaves);
+
+// imprime a estrutura chaves_t formatada
+void imprime_chaves(chaves_t *chaves);
 
 #endif

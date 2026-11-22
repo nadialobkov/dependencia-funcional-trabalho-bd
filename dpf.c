@@ -16,6 +16,13 @@ int contem_atributos(char *atributos, char *conjunto) {
     return 1; // retorna 1 se todos os atributos estiverem presentes
 }
 
+int atributos_iguais(char *atributos1, char *atributos2) {
+    if (strcmp(atributos1, atributos2) == 0) {
+        return 1; // retorna 1 se os conjuntos forem iguais
+    }
+    return 0; // retorna 0 se os conjuntos forem diferentes
+}
+
 // recebe um atributo e retorna o indice correspondente no vetor de atributos
 int get_atrib_index(dpf_t *dpf, char c) {
     for (int i = 0; i < dpf->quant_atrib; i++) {
@@ -273,4 +280,51 @@ void remove_vazios(dpf_t *dpf) {
         }
     }
     dpf->quant_deps = nova_quant_deps;
+}
+
+chaves_t *aloca_chaves(int atributos) {
+    chaves_t *chaves = malloc(sizeof(chaves_t));
+    if (!chaves) {
+        return NULL;
+    }
+    chaves->quant = 0;
+    chaves->chaves = malloc(MAX_DEPENDENCIAS * sizeof(char *));
+    if (!chaves->chaves) {
+        free(chaves);
+        return NULL;
+    }
+    for (int i = 0; i < MAX_DEPENDENCIAS; i++) {
+        chaves->chaves[i] = malloc((atributos + 1) * sizeof(char));
+        if (!chaves->chaves[i]) {
+            for (int j = 0; j < i; j++) {
+                free(chaves->chaves[j]);
+            }
+            free(chaves->chaves);
+            free(chaves);
+            return NULL;
+        }
+    }
+    return chaves;
+}    
+
+void libera_chaves(chaves_t *chaves) {
+    if (chaves) {
+        for (int i = 0; i < MAX_DEPENDENCIAS; i++) {
+            free(chaves->chaves[i]);
+        }
+        free(chaves->chaves);
+        free(chaves);
+    }
+}
+
+void imprime_chaves(chaves_t *chaves) {
+
+    for (int i = 0; i < chaves->quant; i++) {
+        for (int j = 0; j < strlen(chaves->chaves[i]); j++) {
+            if (chaves->chaves[i][j] != VAZIO) {
+                printf("%c", chaves->chaves[i][j]);
+            }
+        }
+        printf("\n");
+    }
 }

@@ -155,3 +155,73 @@ dpf_t *cobertura_min(dpf_t *dpf) {
 
     return cobertura;
 }
+
+chaves_t *chaves_candidatas(dpf_t *dpf) {
+
+    chaves_t *candidatas = aloca_chaves(dpf->quant_atrib);
+
+    // atributos que aparecem apenas do lado esquerdo das dependencias 
+    // devem obrigatoriamente fazer parte de todas as chaves candidatas
+    char *atrib_obrigatorios = malloc((dpf->quant_atrib + 1) * sizeof(char));
+    if (!atrib_obrigatorios) {
+        fprintf(stderr, "Erro de alocacao de memoria.\n");
+        libera_chaves(candidatas);
+        return NULL;
+    }
+    strncpy(atrib_obrigatorios, dpf->atrib, dpf->quant_atrib + 1);
+
+    // percorre deps para identificar atributos obrigatorios
+    for (int i = 0; i < dpf->quant_deps; i++) {
+        for (int j = 0; j < dpf->quant_atrib; j++) {
+            if (dpf->rhs[i][j] != VAZIO) {
+                // remove o atributo do lado direito da lista de obrigatorios
+                int index = get_atrib_index(dpf, dpf->rhs[i][j]);
+                if (index != -1) {
+                    atrib_obrigatorios[index] = VAZIO;
+                }
+            }
+        }
+    }
+
+    // verificamos se eh chave candidata por si so
+    char *fecho_obrigatorios = fecho(dpf, atrib_obrigatorios);
+    if (atributos_iguais(fecho_obrigatorios, dpf->atrib)) {
+        // significa que os atributos obrigatorios sao suficientes para determinar todos os atributos
+        strncpy(candidatas->chaves[candidatas->quant], atrib_obrigatorios, dpf->quant_atrib + 1);
+        candidatas->quant++;
+    }
+    else {
+        // para cada atributo que nao eh obrigatorio, verificamos se ele pode ser adicionado a chave candidata
+        for (int i = 0; i < dpf->quant_atrib; i++) {
+            if (atrib_obrigatorios[i] == VAZIO) {
+                // cria um novo conjunto de atributos adicionando o atributo atual aos obrigatorios
+                char *novo_conjunto = malloc((dpf->quant_atrib + 1) * sizeof(char));
+                if (!novo_conjunto) {
+                    fprintf(stderr, "Erro de alocacao de memoria.\n");
+                    libera_chaves(candidatas);
+                    free(atrib_obrigatorios);
+                    return NULL;
+                }
+                strncpy(novo_conjunto, atrib_obrigatorios, dpf->quant_atrib + 1);
+                // adiciona o atributo atual ao novo conjunto
+                novo_conjunto[i] = dpf->atrib[i];
+                novo_conjunto[dpf->quant_atrib] = '\0';
+
+                // calcula o fecho do novo conjunto
+                char *fecho_novo = fecho(dpf, novo_conjunto);
+                if (atributos_iguais(fecho_novo, dpf->atrib)) {
+                    // significa que o novo conjunto eh chave candidata
+                    strncpy(candidatas->chaves[candidatas->quant], novo_conjunto, dpf->quant_atrib + 1);
+                    candidatas->quant++;
+                }
+                free(fecho_novo);
+                free(novo_conjunto);
+            }
+        }
+
+    }
+    free(fecho_obrigatorios);
+    free(atrib_obrigatorios);
+
+    return candidatas;
+}
