@@ -23,6 +23,32 @@ int atributos_iguais(char *atributos1, char *atributos2) {
     return 0; // retorna 0 se os conjuntos forem diferentes
 }
 
+char *atributos_nao_primos(dpf_t *dpf, chaves_t *candidatas) {
+    char *nao_primos = malloc((dpf->quant_atrib + 1) * sizeof(char));
+    if (!nao_primos) {
+        fprintf(stderr, "Erro de alocacao de memoria.\n");
+        return NULL;
+    }
+    memset(nao_primos, VAZIO, dpf->quant_atrib);
+    nao_primos[dpf->quant_atrib] = '\0';
+
+    for (int i = 0; i < dpf->quant_atrib; i++) {
+        char c = dpf->atrib[i];
+        bool eh_primo = false;
+        for (int j = 0; j < candidatas->quant; j++) {
+            if (strchr(candidatas->chaves[j], c)) {
+                eh_primo = true;
+                break;
+            }
+        }
+        if (!eh_primo) {
+            nao_primos[i] = c;
+        }
+    }
+
+    return nao_primos;
+}
+
 // recebe um atributo e retorna o indice correspondente no vetor de atributos
 int get_atrib_index(dpf_t *dpf, char c) {
     for (int i = 0; i < dpf->quant_atrib; i++) {
@@ -258,6 +284,28 @@ dpf_t *copia_dpf(dpf_t *dpf) {
     }
 
     return copia;
+}
+
+void imprime_dep(char *lhs, char *rhs) {
+    for (int i = 0; i < strlen(lhs); i++) {
+        if (lhs[i] != VAZIO) {
+            printf("%c", lhs[i]);
+        }
+    }
+    printf("->");
+    for (int i = 0; i < strlen(rhs); i++) {
+        if (rhs[i] != VAZIO) {
+            printf("%c", rhs[i]);
+        }
+    }
+}
+
+imprime_atrib(char *atributos) {
+    for (int i = 0; i < strlen(atributos); i++) {
+        if (atributos[i] != VAZIO) {
+            printf("%c", atributos[i]);
+        }
+    }
 }
 
 void remove_vazios(dpf_t *dpf) {

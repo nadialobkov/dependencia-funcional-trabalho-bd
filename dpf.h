@@ -47,6 +47,12 @@ void imprime_dependencias(dpf_t *dpf);
 // imprime atributos formatados
 void imprime_atributos(char *atributos);
 
+// imprime uma unica dependencia funcional formatada
+void imprime_dep(char *lhs, char *rhs);
+
+// imprime um conjunto de atributos formatado
+void imprime_atrib(char *atributos);
+
 // recebe uma dpf e limpa as linhas que tem dependencias vazias (sem determinantes e dependentes)
 // ajusta a quantidade de dependencias da dpf e posicão das linhas validas
 void remove_vazios(dpf_t *dpf);
@@ -62,7 +68,13 @@ int get_atrib_index(dpf_t *dpf, char c);
 // retorna 1 se todos os atributos estiverem presentes, 0 caso contrario
 int contem_atributos(char *atributos, char *conjunto);
 
+// verifica se dois conjuntos de atributos sao iguais
+// retorna 1 se os conjuntos forem iguais, 0 caso contrario
 int atributos_iguais(char *atributos1, char *atributos2);
+
+// retorna vetor de atributos nao-primos da dpf
+// ou seja, atributos que nao fazem parte de nenhuma chave candidata
+char *atributos_nao_primos(dpf_t *dpf, chaves_t *candidatas);
 
 // recebe um conjunto de atributos e um bitmap e retorna uma string com os atributos correspondentes
 char *get_atributos(char *atributos, char *bitmap);

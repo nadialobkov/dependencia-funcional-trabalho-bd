@@ -5,6 +5,12 @@
 #include "dpf.h"
 #include "fdtool.h"
 
+// tipos para impressao da forma normal
+#define FN3_OK 1
+#define FN3_VIOLATION 2
+#define BCNF_OK 3
+#define BCNF_VIOLATION 4
+
 
 char *fecho(dpf_t *dpf, char *atributos) {
 
@@ -224,4 +230,124 @@ chaves_t *chaves_candidatas(dpf_t *dpf) {
     free(atrib_obrigatorios);
 
     return candidatas;
+}
+
+void imprime_forma_normal(char *lhs, char *rhs, int tipo) {
+
+    switch (tipo) {
+        case FN3_OK:
+            printf("3FN: OK\n");
+            break;
+        case FN3_VIOLATION:
+            printf("VIOLATION 3FN: ");
+            imprime_dep(lhs, rhs);
+            printf(" (");
+            imprime_atrib(rhs);
+            printf(" not prime, ");
+            imprime_atrib(lhs);
+            printf(" not superkey)\n");
+            break;
+        case BCNF_OK:
+            printf("BCNF: OK\n");
+            break;
+        case BCNF_VIOLATION:
+            printf("VIOLATION BCNF: ");
+            imprime_dep(lhs, rhs);
+            printf(" (");
+            imprime_atrib(lhs);
+            printf(" not superkey)\n");
+            break;
+        default:
+            fprintf(stderr, "Erro: tipo de forma normal desconhecido.\n");
+    }
+}
+
+
+void forma_normal(dpf_t *dpf) {
+
+    bool fn3 = true; // flag para indicar se a dpf esta na 3FN
+    bool bcnf = true; // flag para indicar se a dpf esta na BCNF
+
+    // vamos assumir que a dpf esta em 1FN sempre, pois nao ha multivalorados nem atributos compostos
+    // verificamos se a dpf esta em 2FN
+
+    // calculamos as chaves candidatas da dpf
+    chaves_t *candidatas = chaves_candidatas(dpf);
+    if (!candidatas) {
+        fprintf(stderr, "Erro de alocacao de memoria.\n");
+        return;
+    }
+
+    // verificacao de 2FN
+
+    // se ha uma unica chave candidata nao composta, a dpf esta em 2FN
+    if (candidatas->quant == 1 && strlen(candidatas->chaves[0]) == 1) {
+        // dpf esta em 2FN
+        libera_chaves(candidatas);
+    } else {
+        // analizamos cada dependencia funcional para verificar se ha dependencias parciais
+        for (int i = 0; i < dpf->quant_deps; i++) {
+            // verificamos se o lado esquerdo da dependencia que contem atributos nao-prmimos
+            // do lado direito eh um subconjunto de alguma chave
+
+            char *nao_primos = atributos_nao_primos(dpf, candidatas);
+            if (contem_atributos(dpf->rhs[i], nao_primos)) {
+                // significa que o lado direito da dependencia contem atributos nao-primos
+                // logo verificamos se o lado esquerdo eh um subconjunto de alguma chave candidata
+                for (int j = 0; j < candidatas->quant; j++) {
+                    if (contem_atributos(candidatas->chaves[j], dpf->lhs[i]) && !atributos_iguais(candidatas->chaves[j], dpf->lhs[i])) {
+                        // significa que o lado esquerdo da dependencia eh um subconjunto de uma
+                        fn3 = false;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // verificacao de 3FN
+
+    if (fn3) {
+        // se a dpf esta em 2FN, verificamos se ha dependencias transitivas
+        for (int i = 0; i < dpf->quant_deps; i++) {
+            // verificamos se o lado direito da dependencia contem atributos nao-primos
+            char *nao_primos = atributos_nao_primos(dpf, candidatas);
+            if (contem_atributos(dpf->rhs[i], nao_primos)) {
+                // significa que o lado direito da dependencia contem atributos nao-primos
+                // logo verificamos se o lado esquerdo eh uma chave candidata
+                bool lhs_eh_chave = false;
+                for (int j = 0; j < candidatas->quant; j++) {
+                    if (atributos_iguais(candidatas->chaves[j], dpf->lhs[i])) {
+                        lhs_eh_chave = true;
+                    }
+                }
+                if (!lhs_eh_chave) {
+                    // significa que o lado esquerdo da dependencia nao eh uma chave candidata
+                    fn3 = false;
+                    imprime_forma_normal(dpf->lhs[i], dpf->rhs[i], FN3_VIOLATION);
+                }
+            }
+        }
+    }
+
+    if (fn3) {
+        imprime_forma_normal(NULL, NULL, FN3_OK);
+    }
+
+    // verificacao de BCNF
+    // se a dpf esta em 3FN, verificamos se ha dependencias que violam a BCNF
+    for (int i = 0; i < dpf->quant_deps; i++) {
+        // verificamos se o lado esquerdo da dependencia eh uma superchave
+        char *fecho_lhs = fecho(dpf, dpf->lhs[i]);
+        if (!atributos_iguais(fecho_lhs, dpf->atrib)) {
+            // significa que o lado esquerdo da dependencia nao eh uma superchave
+            bcnf = false;
+            imprime_forma_normal(dpf->lhs[i], dpf->rhs[i], BCNF_VIOLATION);
+            free(fecho_lhs);
+        }
+    }
+
+    if (bcnf) {
+        imprime_forma_normal(NULL, NULL, BCNF_OK);
+    }
 }

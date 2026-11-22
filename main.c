@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
         libera_chaves(candidatas);
     } 
     else if (strcmp(argv[1], "normalform") == 0) {
-        // forma_normal(dpf);
+        forma_normal(dpf);
     } 
     else {
         fprintf(stderr, "Comando desconhecido: %s\n", argv[1]);
