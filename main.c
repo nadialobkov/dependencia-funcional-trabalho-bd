@@ -42,10 +42,15 @@ int main(int argc, char *argv[]) {
             fclose(entrada);
             return EXIT_FAILURE;
         }
-        fecho(dpf, argv[5]);
+        char *atributos = argv[5];
+        char *fecho_resultado = fecho(dpf, atributos);
+        imprime_atributos(fecho_resultado);
+        free(fecho_resultado);
     } 
     else if (strcmp(argv[1], "mincover") == 0) {
-        // cobertura_min(dpf);
+        dpf_t *min_cover = cobertura_min(dpf);
+        imprime_dependencias(min_cover);
+        libera_dpf(min_cover);
     } 
     else if (strcmp(argv[1], "keys") == 0) {
         // chaves_candidatas(dpf);
@@ -61,7 +66,6 @@ int main(int argc, char *argv[]) {
     }
 
 
-    imprime_dpf(dpf);
     libera_dpf(dpf);
     fclose(entrada);
 

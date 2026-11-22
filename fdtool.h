@@ -4,9 +4,9 @@
 #include "dpf.h"
 
 
-void fecho(dpf_t *dpf, char *atributos);
+char *fecho(dpf_t *dpf, char *atributos);
 
-void cobertura_min(dpf_t *dpf);
+dpf_t *cobertura_min(dpf_t *dpf);
 
 void chaves_candidatas(dpf_t *dpf);
 

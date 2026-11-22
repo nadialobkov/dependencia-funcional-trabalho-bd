@@ -4,6 +4,8 @@
 #include <stdio.h>
 
 #define VAZIO ' '
+#define MAX_BUFFER 150          // tamanho maximo do buffer para leitura das linhas do arquivo
+#define MAX_DEPENDENCIAS 25     // quantidade maxima de dependencias de uma dpf
 
 // ESTRUTURA ------------------------------------------------------------------------------
 
@@ -27,8 +29,21 @@ dpf_t *leitura_dpf(FILE *entrada);
 // libera a memoria alocada para a estrutura dpf_t
 void libera_dpf(dpf_t *dpf);
 
+// retorna uma copia de uma dpf
+dpf_t *copia_dpf(dpf_t *dpf);
+
 // imprime a estrutura dpf_t
 void imprime_dpf(dpf_t *dpf);
+
+// imprime apenas as dependencias funcionais da estrutura dpf_t
+void imprime_dependencias(dpf_t *dpf);
+
+// imprime atributos formatados
+void imprime_atributos(char *atributos);
+
+// recebe uma dpf e limpa as linhas que tem dependencias vazias (sem determinantes e dependentes)
+// ajusta a quantidade de dependencias da dpf e posicão das linhas validas
+void remove_vazios(dpf_t *dpf);
 
 // recebe um atributo e retorna o indice correspondente no vetor de atributos
 // retorna -1 se o atributo nao for encontrado

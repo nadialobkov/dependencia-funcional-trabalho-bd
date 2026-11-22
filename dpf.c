@@ -5,8 +5,6 @@
 #include <ctype.h>
 #include "dpf.h"
 
-#define MAX_BUFFER 100
-#define MAX_DEPENDENCIAS 25
 
 
 int contem_atributos(char *atributos, char *conjunto) {
@@ -175,4 +173,104 @@ void imprime_dpf(dpf_t *dpf) {
         }
         printf("\n");
     }
+}
+
+void imprime_dependencias(dpf_t *dpf) {
+
+    for (int i = 0; i < dpf->quant_deps; i++) {
+        for (int j = 0; j < dpf->quant_atrib; j++) {
+            if (dpf->lhs[i][j] != VAZIO) {
+                printf("%c", dpf->lhs[i][j]);
+            }
+        }
+        printf(" -> ");
+        for (int j = 0; j < dpf->quant_atrib; j++) {
+            if (dpf->rhs[i][j] != VAZIO) {
+                printf("%c", dpf->rhs[i][j]);
+            }
+        }
+        printf("\n");
+    }
+}
+
+void imprime_atributos(char *atributos) {
+    
+    for (int i = 0; i < strlen(atributos); i++) {
+        if (atributos[i] != VAZIO) {
+            printf("%c", atributos[i]);
+        }
+    }
+    printf("\n");
+}
+
+dpf_t *copia_dpf(dpf_t *dpf) {
+
+    if (!dpf) {
+        return NULL;
+    }
+
+    dpf_t *copia = malloc(sizeof(dpf_t));
+    if (!copia) {
+        return NULL;
+    }
+
+    copia->quant_atrib = dpf->quant_atrib;
+    copia->quant_deps = dpf->quant_deps;
+
+    copia->atrib = malloc((dpf->quant_atrib + 1) * sizeof(char));
+    if (!copia->atrib) {
+        free(copia);
+        return NULL;
+    }
+    strncpy(copia->atrib, dpf->atrib, dpf->quant_atrib + 1);
+
+    copia->lhs = malloc(MAX_DEPENDENCIAS * sizeof(char *));
+    copia->rhs = malloc(MAX_DEPENDENCIAS * sizeof(char *));
+    if (!copia->lhs || !copia->rhs) {
+        free(copia->atrib);
+        free(copia);
+        return NULL;
+    }
+
+    for (int i = 0; i < MAX_DEPENDENCIAS; i++) {
+        copia->lhs[i] = cria_linha(dpf->quant_atrib);
+        copia->rhs[i] = cria_linha(dpf->quant_atrib);
+        if (!copia->lhs[i] || !copia->rhs[i]) {
+            for (int j = 0; j <= i; j++) {
+                free(copia->lhs[j]);
+                free(copia->rhs[j]);
+            }
+            free(copia->lhs);
+            free(copia->rhs);
+            free(copia->atrib);
+            free(copia);
+            return NULL;
+        }
+        strncpy(copia->lhs[i], dpf->lhs[i], dpf->quant_atrib + 1);
+        strncpy(copia->rhs[i], dpf->rhs[i], dpf->quant_atrib + 1);
+    }
+
+    return copia;
+}
+
+void remove_vazios(dpf_t *dpf) {
+    
+    int nova_quant_deps = 0;
+    for (int i = 0; i < dpf->quant_deps; i++) {
+        bool vazio = true;
+        for (int j = 0; j < dpf->quant_atrib; j++) {
+            if (dpf->lhs[i][j] != VAZIO || dpf->rhs[i][j] != VAZIO) {
+                vazio = false;
+                break;
+            }
+        }
+        if (!vazio) {
+            if (nova_quant_deps != i) {
+                strncpy(dpf->lhs[nova_quant_deps], dpf->lhs[i], dpf->quant_atrib + 1);
+                strncpy(dpf->rhs[nova_quant_deps], dpf->rhs[i], dpf->quant_atrib + 1);
+            }
+            nova_quant_deps++;
+        }
+    }
+    dpf->quant_deps = nova_quant_deps;
 }

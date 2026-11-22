@@ -1,0 +1,2 @@
+U = {A,B,C,D}
+F = {AB->C, A->C, C->D, A->CD}
