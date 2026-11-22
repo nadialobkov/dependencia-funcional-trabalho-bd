@@ -21,7 +21,11 @@ K+ = U;
 
 ## Estrutura
 
+### `dpf_t`
+
 A estrutura escolhida para guardar o conjunto de dependências funcionais foi uma `struct` que armazena o vetor de atributos, a quantidade de atributos, a quantidade de dependencias funcionais, uma matriz com os atributos do lado esquerdo de todas as dependências funcionais e uma matriz contendo o lado direito. 
+
+O vetor de atributos é alocado de maneira que contenha o espaço exato para armazenar os atributos da relação, visto que estes não mudam. A matriz de dependências (lado esquerdo e direito) tem suas colunas com espaço exato para os possíveis atributos, porém a diferença é que a quantidade de linhas é definida pelo valor em `MAX_DEPENDENCIAS`. A ideia é que esse valor seja maior que as dependências existentes, pois em cálculos de cobertura mínima linhas novas podem ser adicionadas.
 
 ```c
 typedef struct dpf_t {
@@ -35,7 +39,7 @@ typedef struct dpf_t {
 
 Seja $a_i$ o elemento na posição $i$ do vetor `atrib`, temos as matrizes `lhs`e `rhs` de elementos $b_{ji}$ onde $j$ corresponde ao número da dependência funcional.
 
-### Exemplo
+#### Exemplo
 
 Dada a seguinte entrada:
 
@@ -63,6 +67,42 @@ A estrutura `dpf_t` guarda os valores da seguinte maneira:
 
 > Obs: Os "_" estão escritos no exemplo apenas para melhor a visualização. Na prática, os vetores contêm espaços vazios (" ").
 
+### `chaves_t`
+
+De maneira análoga, há uma outra estrutura chamada `chaves_t` que foi criada para armazenar os pares de chaves candidatas. Ela consiste em uma matriz `MAX_DEPENDENCIAS` $\times$ `quant_atrib` e uma variável que guarda a quantidade de linhas que estão sendo usadas na prática.
+
+```c
+typedef struct chaves_t {
+    char **chaves;      // matriz de chaves candidatas
+    int quant;          // quantidade de chaves candidatas
+} chaves_t;
+```
+
+#### Exemplo
+
+Dada a seguinte entrada:
+
+```txt
+U = {A,B,C,D,E}
+F = { AB->C, AC->B, BC->A }
+```
+
+A estrutura `chaves_t` guarda os valores da seguinte maneira:
+
+```txt
+- atrib:          ABCDE
+
+- quant:          5
+
+- lhs:            A____
+                  __C__
+                  _B_D_
+                  _____
+                  _____  
+                  ...
+```
+
+
 ## Leitura da Entrada
 
 A função `main` faz a análise dos argumentos passados na linha de comando, identifica o caminho para o arquivo de extensão `.fds` e chama a função `leitura_dpf` para fazer o *parsing* do arquivo e armazenar as informações na estrutura `dpf_t`.
@@ -76,4 +116,9 @@ dpf_t *leitura_dpf(FILE *entrada);
 Seja o fecho $X^+$. O cálculo do fecho segue a seguinte lógica já conhecida:
 
 1. Criamos um vetor `fecho` com o mesmo tamanho da quantidade de atributos que vai guardar o fecho do conjunto $X$. Inicialmente, copiamos o conjunto $X$ direto no vetor de fecho, pois sabemos que $X \subseteq X^+$.
-2. Percorremos as dependências funcionais.
+2. Percorremos as dependências funcionais e usamos uma flag `mudou` para sabermos quando parar.
+3. Em cada iteração, vemos se o lado esquerdo está contido no fecho atual, se sim adicionamos o lado direito dentro do fecho.
+4. Se finalizarmos uma varredura completa e não houver mudanças no fecho, encerramos o cálculo.
+
+## Cobertura Mínima
+

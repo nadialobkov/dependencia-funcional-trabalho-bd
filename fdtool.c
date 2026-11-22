@@ -295,7 +295,7 @@ void forma_normal(dpf_t *dpf) {
                 // significa que o lado direito da dependencia contem atributos nao-primos
                 // logo verificamos se o lado esquerdo eh um subconjunto de alguma chave candidata
                 for (int j = 0; j < candidatas->quant; j++) {
-                    if (contem_atributos(candidatas->chaves[j], dpf->lhs[i]) && !atributos_iguais(candidatas->chaves[j], dpf->lhs[i])) {
+                    if (contem_atributos(dpf->lhs[i], candidatas->chaves[j]) && !atributos_iguais(candidatas->chaves[j], dpf->lhs[i])) {
                         // significa que o lado esquerdo da dependencia eh um subconjunto de uma
                         fn3 = false;
                         break;
