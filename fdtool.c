@@ -82,6 +82,7 @@ dpf_t *cobertura_min(dpf_t *dpf) {
 
                     // remove o atributo do lado direito da dependencia original
                     cobertura->rhs[i][j] = VAZIO;
+                    contagem--;
                 }
             }
         }
